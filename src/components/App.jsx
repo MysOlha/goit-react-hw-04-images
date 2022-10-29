@@ -14,21 +14,18 @@ const App = () => {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
 
-  const getImages = () => {
+  useEffect(() => {
+    if (query === '') {
+      return;
+    }
     setLoading(true);
     fetchImages(query, page)
-      .then(({ img }) => {
-        setImages(prevImg => [...prevImg, ...img]);
+      .then(({ hits }) => {
+        setImages(prevImg => [...prevImg, ...hits]);
       })
       .catch(error => console.log(error))
       .finally(() => setLoading(false));
-  };
-
-  useEffect(() => {
-    if (query) {
-      getImages();
-    }
-  });
+  }, [page, query]);
 
   const loadMore = () => {
     setPage(prevPage => prevPage + 1);
