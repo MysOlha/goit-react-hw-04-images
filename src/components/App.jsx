@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.min.css';
@@ -10,76 +10,72 @@ import Loader from './Loader';
 
 const APIURL = 'https://pixabay.com/api';
 const KEY = '29767436-14c23983d91939ba59ac81ecb';
-class App extends Component {
-  state = {
-    imageName: '',
-    images: [],
-    page: 1,
-    loading: false,
-    error: null,
-    perPage: 12,
-  };
+const PERPAGE = 12;
 
-  getImages = () => {
-    this.setState({ loading: true });
+const App = () => {
+  const [imageName, setImageName] = useState('');
+  const [images, setImages] = useState([]);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const getImages = () => {
+    setLoading(true);
     axios
       .get(
-        `${APIURL}/?key=${KEY}&q=${this.state.imageName}&page=${this.state.page}&image_type=photo&orientation=horizontal&per_page=${this.state.perPage}`
+        `${APIURL}/?key=${KEY}&q=${imageName}&page=${page}&image_type=photo&orientation=horizontal&per_page=${PERPAGE}`
       )
       .then(res =>
-        this.setState(({ images }) => ({
+        setImages(({ images }) => ({
           images: [...images, ...res.data.hits],
         }))
       )
-      .catch(error => this.setState({ error }))
-      .finally(() => this.setState({ loading: false }));
+      .catch(error => setError(error))
+      .finally(() => setLoading(false));
   };
 
-  componentDidUpdate(_, prevState) {
-    if (
-      prevState.images !== this.props.images &&
-      this.state.images.totalHits === 0
-    ) {
+  useEffect(() => {
+    if (images !== setImages && images.totalHits === 0) {
       toast('No images');
     }
-  }
 
-  loadMore = () => {
-    this.setState(
-      ({ page }) => ({
-        page: page + 1,
-      }),
-      this.getImages
-    );
+    // return () => {
+    //   effect;
+    // };
+  }, [images]);
+
+  const loadMore = () => {
+    setPage(prevPage => prevPage + 1);
   };
 
-  handleChangeName = imageName => {
-    this.setState({ imageName, page: 1, images: [] }, this.getImages);
+  const handleChangeName = imageName => {
+    console.log(imageName);
+    setImageName(imageName);
+    setPage(1);
+    setImages([]);
   };
 
-  render() {
-    const { loading, images, perPage } = this.state;
-    return (
-      <>
-        <Searchbar onSubmit={this.handleChangeName} />
+  // const { loading, images, perPage } = this.state;
+  return (
+    <>
+      <Searchbar onSubmit={handleChangeName} />
 
-        <ImageGallery images={images} />
+      <ImageGallery images={images} />
 
-        {images.length === 0 && !loading && (
-          <h2 style={{ textAlign: 'center' }}>No images for showing</h2>
-        )}
+      {images.length === 0 && !loading && (
+        <h2 style={{ textAlign: 'center' }}>No images for showing</h2>
+      )}
 
-        {loading && <Loader />}
+      {loading && <Loader />}
 
-        {images.length >= perPage &&
-          images.length % perPage === 0 &&
-          !loading && <Button onClick={this.loadMore} />}
+      {images.length >= PERPAGE &&
+        images.length % PERPAGE === 0 &&
+        !loading && <Button onClick={loadMore} />}
 
-        <ToastContainer />
-      </>
-    );
-  }
-}
+      <ToastContainer />
+    </>
+  );
+};
 
 export default App;
 //
